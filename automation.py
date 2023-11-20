@@ -2,37 +2,43 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By 
 import openpyxl 
 
-def collect_data(url):
-    driver.get(url)
-    titles = driver.find_elements(By.XPATH, "//h3[@class='product-name']")
-    prices = driver.find_elements(By.XPATH, "//span[@class='price-boleto']")
-    return zip(titles, prices)
+class GameDataCollector:
 
-def add_to_sheet(data, sheet):
-    for title, price in data:
-        sheet.append([title.text, price.text])
+    def __init__(self):
+        self.driver = webdriver.Chrome()
+        self.workboot = openpyxl.workboot()
 
-driver = webdriver.Chrome()
+    def collect_data(self, url):
+        self.driver.get(url)
+        titles = self.driver.find_elements(By.XPATH, "//h3[@class='product-name']")
+        prices = self.driver.find_elements(By.XPATH, "//span[@class='price-boleto']")
+        return zip(titles, prices)
 
-workboot = openpyxl.Workbook()
-workboot.create_sheet('Games PS4')
+    def add_to_sheet(self, data, sheet):
+        for title, price in data:
+            sheet.append([title.text, price.text])
 
-sheet_games_ps4 = workboot['Games PS4']
-sheet_games_ps4['A1'].value = 'Game'
-sheet_games_ps4['B1'].value = 'Price'
+    def create_sheet(self, name):
+        self.workboot.create_sheet(name)
+        sheet = self.workboot[name]
+        sheet['A1'].value = 'Game'
+        sheet['B1'].value = 'Price'
+        return sheet
 
-data = collect_data('https://www.lojasgamemania.com.br/jogo-playstation-4')
-add_to_sheet(data, sheet_games_ps4)
+    def save(self, filename):
+        self.workboot.save(filename)
 
-data = collect_data('https://www.lojasgamemania.com.br/jogo-playstation-4?p=2')
-add_to_sheet(data, sheet_games_ps4)
+collector = GameDataCollector()
 
-workboot.create_sheet('Games SWITCH')
-sheet_games_sw = workboot['Games SWITCH']
-sheet_games_sw['A1'].value = 'Game'
-sheet_games_sw['B1'].value = 'Price'
+sheet_games_ps4 = collector.create_sheet('Games PS4')
+dataPS4_1 = collector.collect_data('https://www.lojasgamemania.com.br/jogo-playstation-4')
+collector.add_to_sheet(dataPS4_1, sheet_games_ps4)
 
-data = collect_data('https://www.lojasgamemania.com.br/jogos-de-nintendo-switch')
-add_to_sheet(data, sheet_games_sw)
+dataPS4_2 = collector.collect_data('https://www.lojasgamemania.com.br/jogo-playstation-4?p=2')
+collector.add_to_sheet(dataPS4_2, sheet_games_ps4)
 
-workboot.save('Games.xlsx')
+sheet_games_sw = collector.create_sheet('Games SWITCH')
+dataSW = collector.collect_data('https://www.lojasgamemania.com.br/jogos-de-nintendo-switch')
+collector.add_to_sheet(dataSW, sheet_games_sw)
+
+collector.save('Games.xlsx')
